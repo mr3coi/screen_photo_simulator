@@ -8,16 +8,30 @@ import os
 
 def get_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--datapath", default='../data/sample_images')
-    parser.add_argument("--file", default='med_1.jpg')
 
+    # File I/O
+    parser.add_argument("--datapath", default='../data/sample_images',
+                        help="Path to the directory containing the source image.")
+    parser.add_argument("--file", default='med_1.jpg',
+                        help="Name of the source image file.")
+    parser.add_argument("--savepath", default='../data/output',
+                        help="Path to the output storage directory \
+                                (automatically generated if not yet there).")
+    parser.add_argument("--save", type=str, default=None,
+                        help="Name of the output file storing the results \
+                                (not saved if not provided).")
+    parser.add_argument("--save-format", type=str, default='jpg',
+                        help="File format of the output file (default: JPEG).")
+
+    # Image-related
     parser.add_argument("--canvas-dim", type=int, nargs='+', default=1024,
                         help="Dimensions (height, width) of the canvas to use. \
                                 Provide a single value to produce a square canvas.")
-    parser.add_argument("--empty", action='store_true',
+    parser.add_argument('-e', "--empty", action='store_true',
                         help="Create a white blank canvas, instead of using an image")
-    parser.add_argument("--gamma", type=float, default=1,
+    parser.add_argument('-g', "--gamma", type=float, default=1,
                         help="Do gamma correction on the given input (default: 1 => no correction)")
+
     return parser
 
 def main():
@@ -50,6 +64,7 @@ def main():
     '''
     # ===========================================================================================
 
+    # Display result
     cv2.imshow("modified", canvas)
     '''
     cv2.imshow("source-med diff", np.abs(original-med))
@@ -59,8 +74,16 @@ def main():
     '''
     if not args.empty:
         cv2.imshow("original", original)
-        print("PSNR value: %.4f db" % psnr(canvas,original))
+        psnr_val = psnr(canvas,original)
+        print("PSNR value: %.4f db" % psnr_val)
     cv2.waitKey(0)
+
+    # Save output
+    if not args.empty and args.save:
+        if not os.path.isdir(args.savepath):
+            os.makedirs(args.savepath)
+        save_name = args.save + '_{:.4f}.{}'.format(psnr_val, args.save_format)
+        cv2.imwrite(os.path.join(args.savepath, save_name), canvas)
 
 def linear_wave(canvas, color=None, contrast=1, gap=5, skew=0, thick=2, rowwise=True):
     mask_shape = list(canvas.shape)
@@ -127,9 +150,3 @@ def radialShape(canvas, center, radius, count, color=(0,0,0), thick=1):
 
 if __name__ == "__main__":
     main()
-
-    '''
-    # polar equation
-    theta = np.linspace(0, np.pi, 1000)
-    r = 1 / (np.sin(theta) - np.cos(theta))
-    '''
