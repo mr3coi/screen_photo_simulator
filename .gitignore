@@ -2,4 +2,9 @@
 *.swp
 *.swo
 __pycache__
+*.jpg
+*.png
+*.JPG
+*.JPEG
+*.jpeg
 data/icl_dragotti
