@@ -5,7 +5,7 @@ import cv2
 import argparse
 import os
 
-from image_tools import psnr, dctII, idctII
+from image_tools import psnr, dctII, idctII, histogram_equalize
 
 def get_parser():
     parser = argparse.ArgumentParser()
@@ -54,17 +54,6 @@ def main():
     for name, img in zip(names, items):
         cv2.imshow(name, img)
     cv2.waitKey(0)
-
-def histogram_equalize(array: np.array, num_bins=1000):
-    array = array + np.abs(array.min())
-    h = np.histogram(array, bins=num_bins, range=(0, array.max()))
-    c = 255 * np.cumsum(h[0]) / np.sum(h[0])
-
-    new_img = np.zeros(array.shape)
-    max_val = array.max()
-    for index,value in np.ndenumerate(array):
-        new_img[index] = c[int((num_bins-1) * value / max_val)]
-    return np.floor(new_img)
 
 def dct_add_noise(image):
     def generate_noise(image):
