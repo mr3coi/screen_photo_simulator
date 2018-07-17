@@ -2,3 +2,8 @@
 *.swp
 *.swo
 __pycache__
+*.jpg
+*.png
+*.JPG
+*.JPEG
+*.jpeg

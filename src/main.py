@@ -57,14 +57,13 @@ def main():
     H, W, _ = canvas.shape
 
     # ================================== Add operations here =====================================
-    '''
+    #canvas = linear_wave(canvas, skew=20, rowwise=False)
     canvas = linear_wave(canvas,skew=80, pattern=args.type,contrast=10,dev=10//3,seed=args.seed)
     canvas = linear_wave(canvas,skew=20, pattern=args.type,contrast=10,dev=10//3,seed=args.seed)
     canvas = linear_wave(canvas,skew=20,rowwise=False, pattern=args.type,contrast=10,dev=10//3,seed=args.seed)
     canvas = linear_wave(canvas,skew=80,rowwise=False, pattern=args.type,contrast=10,dev=10//3,seed=args.seed)
-    '''
 
-    canvas = dither(canvas,gap=10, skew=50, pattern='single', contrast=30, rowwise=True)
+    #canvas = dither(canvas,gap=10, skew=50, pattern='rgb', contrast=30, rowwise=True)
     '''
     lineNSkew(canvas, gap=1, skew=50, thick=1, color=(255,255,255))
 
@@ -86,7 +85,9 @@ def main():
     if not args.empty and args.save:
         if not os.path.isdir(args.savepath):
             os.makedirs(args.savepath)
-        save_name = args.save + '_{:.4f}.{}'.format(psnr_val, args.save_format)
+        save_name = args.save + '_g{}'.format(args.gamma)
+        save_name += '_{:.4f}'.format(psnr_val)
+        save_name += '.{}'.format(args.save_format)
         cv2.imwrite(os.path.join(args.savepath, save_name), canvas)
 
 if __name__ == "__main__":
