@@ -1,6 +1,14 @@
 import numpy as np
 import cv2
 
+from scipy.fftpack import dct, idct
+
+def dctII(image: np.array):
+    return dct(dct(image, axis=0, norm='ortho'), axis=1, norm='ortho')
+
+def idctII(array: np.array):
+    return idct(idct(array, axis=1, norm='ortho'), axis=0, norm='ortho')
+
 def gamma_correction(img, gamma=2.2, alpha=1):
     invgamma = 1.0/gamma
     table = np.array([(val / 255.0)**invgamma * 255 \

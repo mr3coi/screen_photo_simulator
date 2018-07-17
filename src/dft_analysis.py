@@ -7,14 +7,6 @@ import os
 
 from image_tools import psnr, dctII, idctII
 
-from scipy.fftpack import dct, idct
-
-def dctII(image: np.array):
-    return dct(dct(image, axis=0, norm='ortho'), axis=1, norm='ortho')
-
-def idctII(array: np.array):
-    return idct(idct(array, axis=1, norm='ortho'), axis=0, norm='ortho')
-
 def get_parser():
     parser = argparse.ArgumentParser()
 
