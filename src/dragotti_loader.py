@@ -15,10 +15,16 @@ def main():
     args = parser.parse_args()
     dataset = DragottiDataset(args.root_path, args.verbose)
 
-    for key_pair in dataset.recaptured_pairs.keys():
-        for idx in dataset.recaptured_pairs[key_pair]:
-            filepath = dataset.construct(key_pair, idx)
-            #print(filepath, os.path.exists(filepath))
+    # Example usage
+    for key in dataset.single_table.keys():
+        for idx in dataset.single_table[key]:
+            s_filepath = dataset.s_construct_path(key, idx)
+            print(s_filepath, os.path.exists(s_filepath))
+
+    for key_pair in dataset.recaptured_table.keys():
+        for idx in dataset.recaptured_table[key_pair]:
+            r_filepath = dataset.r_construct_path(key_pair, idx)
+            print(r_filepath, os.path.exists(r_filepath))
 
 class DragottiDataset(object):
     def __init__(self, root_path, verbose=False):
@@ -29,7 +35,8 @@ class DragottiDataset(object):
         self.MONITOR = 'EA232WMI'       # Invariant
         self._patterns = [r'DS-05-(\d+)-S%(\w+).JPG',
                           r'DS-05-R%(\w+)%(\w+)%(\w+)-(\d+).png']
-        self._formats = ['DS-05-{}-S%{}.JPG', 'DS-05-R%{}%{}%{}-{}.png']
+        self._formats = ['DS-05-0{}-S%{}.JPG',           # (idx, s_camera)
+                         'DS-05-R%{}%{}%{}-{}.png']     # (r_camera, MONITOR, s_camera, idx)
 
         self._dirs = [os.path.join(root_path, dir_name) for dir_name in ['SingleCaptureImages','RecapturedImages']]
         self._cameras = [[item for item in os.listdir(directory) if os.path.isdir(os.path.join(directory,item))] \
@@ -97,13 +104,21 @@ class DragottiDataset(object):
                 candidates = self._pairs['recaptured'][pair]
                 print(pair, len(candidates))
 
-    def construct(self, key_pair, idx):
+    def s_construct_path(self, key, idx):
+        filename = self._formats[self.SINGLE].format(idx, key)
+        return os.path.join(self._dirs[self.SINGLE], key, filename)
+
+    def r_construct_path(self, key_pair, idx):
         s_camera, r_camera = key_pair
         filename = self._formats[self.RECAPTURE].format(r_camera, self.MONITOR, s_camera, idx)
         return os.path.join(self._dirs[self.RECAPTURE], r_camera, filename)
 
     @property
-    def recaptured_pairs(self):
+    def single_table(self):
+        return self._pairs['single']
+
+    @property
+    def recaptured_table(self):
         return self._pairs['recaptured']
 
 if __name__ == "__main__":
