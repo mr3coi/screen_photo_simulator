@@ -4,6 +4,7 @@ import numpy as np
 from image_tools import *
 from moire import linear_wave, dither
 from basic_shapes import circles
+from module import RecaptureModule
 
 import argparse
 import os
@@ -35,6 +36,9 @@ def get_parser():
                         help="Do gamma correction on the given input (default: 1 => no correction)")
     parser.add_argument('-t', "--type", type=str, default='fixed',
                         help="Type of pattern to generate.")
+    parser.add_argument('-rv', "--recapture-verbose", action='store_true',
+                        help="Print the log of progress produced as \
+                                RecaptureModule transforms the input image.")
 
     # Others
     parser.add_argument("--seed", type=int, default=0,
@@ -57,11 +61,10 @@ def main():
     H, W, _ = canvas.shape
 
     # ================================== Add operations here =====================================
-    #canvas = linear_wave(canvas, skew=20, rowwise=False)
-    canvas = linear_wave(canvas,skew=80, pattern=args.type,contrast=10,dev=10//3,seed=args.seed)
-    canvas = linear_wave(canvas,skew=20, pattern=args.type,contrast=10,dev=10//3,seed=args.seed)
-    canvas = linear_wave(canvas,skew=20,rowwise=False, pattern=args.type,contrast=10,dev=10//3,seed=args.seed)
-    canvas = linear_wave(canvas,skew=80,rowwise=False, pattern=args.type,contrast=10,dev=10//3,seed=args.seed)
+    recap_module = RecaptureModule(v_moire=2, v_type='sg', v_skew=[20, 80], v_cont=10, v_dev=3,
+                                   h_moire=2, h_type='f', h_skew=[20, 80], h_cont=10, h_dev=3,
+                                   gamma=2.2)
+    canvas = recap_module(canvas, verbose=args.recapture_verbose)
 
     #canvas = dither(canvas,gap=10, skew=50, pattern='rgb', contrast=30, rowwise=True)
     '''
