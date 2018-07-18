@@ -39,6 +39,8 @@ def get_parser():
     parser.add_argument('-rv', "--recapture-verbose", action='store_true',
                         help="Print the log of progress produced as \
                                 RecaptureModule transforms the input image.")
+    parser.add_argument("--psnr", action='store_true',
+                        help="Compute the PSNR value of the output image.")
 
     # Others
     parser.add_argument("--seed", type=int, default=0,
@@ -56,15 +58,37 @@ def main():
     else:
         canvas = cv2.imread(os.path.join(args.datapath, args.file), cv2.IMREAD_COLOR)
         original = canvas.copy()
-        if args.gamma != 1:
-            canvas = gamma_correction(canvas, args.gamma)
     H, W, _ = canvas.shape
 
     # ================================== Add operations here =====================================
-    recap_module = RecaptureModule(v_moire=2, v_type='sg', v_skew=[20, 80], v_cont=10, v_dev=3,
-                                   h_moire=2, h_type='f', h_skew=[20, 80], h_cont=10, h_dev=3,
-                                   gamma=2.2)
-    canvas = recap_module(canvas, verbose=args.recapture_verbose)
+    #dst_H = 600; dst_W = 800
+    dst_H, dst_W, _ = original.shape
+
+    src_pt = np.zeros((4,2), dtype="float32")
+    src_pt[0] = [W // 4, H // 4]
+    src_pt[1] = [W // 4 * 3, H // 4]
+    src_pt[2] = [W // 4 * 3, H // 4 * 3]
+    src_pt[3] = [W // 4, H // 4 * 3]
+
+    dst_pt = np.zeros((4,2), dtype="float32")
+    dst_pt[0] = [dst_W // 4, dst_H // 4]    # top-left
+    dst_pt[1] = [dst_W // 4 * 3, dst_H // 4]   # top-right
+    dst_pt[2] = [dst_W // 4 * 3, dst_H // 4 * 3]   # bottom-right
+    dst_pt[3] = [dst_W // 4, dst_H // 4 * 3]   # bottom-left
+
+    t_margin = [0,0.1]
+    b_margin = [0.9,1]
+    l_margin = [0,0.1]
+    r_margin = [0.9,1]
+    sample_margins = [t_margin,b_margin,l_margin,r_margin]
+
+    recap_module = RecaptureModule(dst_H, dst_W,
+                                   v_moire=0, v_type='sg', v_skew=[20, 80], v_cont=10, v_dev=3,
+                                   h_moire=0, h_type='f', h_skew=[20, 80], h_cont=10, h_dev=3,
+                                   gamma=args.gamma, margins=sample_margins, seed=args.seed)
+    canvas = recap_module(canvas,
+                          new_src_pt = src_pt,
+                          verbose=args.recapture_verbose)
 
     #canvas = dither(canvas,gap=10, skew=50, pattern='rgb', contrast=30, rowwise=True)
     '''
@@ -80,8 +104,9 @@ def main():
     cv2.imshow("modified", canvas)
     if not args.empty:
         cv2.imshow("original", original)
-        psnr_val = psnr(canvas,original)
-        print("PSNR value: %.4f db" % psnr_val)
+        if original.shape == canvas.shape and args.psnr:
+            psnr_val = psnr(canvas,original)
+            print("PSNR value: %.4f db" % psnr_val)
     cv2.waitKey(0)
 
     # Save output
