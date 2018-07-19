@@ -35,6 +35,8 @@ def main():
 
     # Warp the input image
     '''
+    # Test I: Transform an image so that a distorted item in the image is recovered
+
     src_points = np.zeros((4,2), dtype="float32")
     src_points[0] = [165,775]    # top-left
     src_points[1] = [1470,750]    # top-right
@@ -50,20 +52,24 @@ def main():
     dst_points[3] = [dst_W // 4, dst_H // 4 * 3]   # bottom-left
     '''
 
+    # Test II: Warp an image
+
+    ### Set the corners of the image as source points
     src_points = np.zeros((4,2), dtype="float32")
     src_points[0] = [0,0]    # top-left (w,h)
     src_points[1] = [W-1,0]    # top-right (w,h)
     src_points[2] = [W-1,H-1]    # bottom-right (w,h)
     src_points[3] = [0,H-1]    # bottom-left (w,h)
 
+    ### Dest image dimensions
     dst_H = 600
     dst_W = 800
 
+    ### Randomly generate dest points within the given margins
     t_margin = [0,0.1]
     b_margin = [0.9,1]
     l_margin = [0,0.1]
     r_margin = [0.9,1]
-
     tl_h, tr_h = np.random.randint(*[dst_H * val for val in t_margin], size=2)
     bl_h, br_h = np.random.randint(*[dst_H * val for val in b_margin], size=2)
     tl_w, bl_w = np.random.randint(*[dst_W * val for val in l_margin], size=2)

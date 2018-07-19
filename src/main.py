@@ -83,8 +83,8 @@ def main():
     sample_margins = [t_margin,b_margin,l_margin,r_margin]
 
     recap_module = RecaptureModule(dst_H, dst_W,
-                                   v_moire=0, v_type='sg', v_skew=[20, 80], v_cont=10, v_dev=3,
-                                   h_moire=0, h_type='f', h_skew=[20, 80], h_cont=10, h_dev=3,
+                                   v_moire=2, v_type='sg', v_skew=[20, 80], v_cont=10, v_dev=3,
+                                   h_moire=2, h_type='f', h_skew=[20, 80], h_cont=10, h_dev=3,
                                    gamma=args.gamma, margins=sample_margins, seed=args.seed)
     canvas = recap_module(canvas,
                           new_src_pt = src_pt,
