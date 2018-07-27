@@ -87,12 +87,11 @@ def main():
     recap_module = RecaptureModule(dst_H, dst_W,
                                    v_moire=0, v_type='sg', v_skew=[20, 80], v_cont=10, v_dev=3,
                                    h_moire=0, h_type='f', h_skew=[20, 80], h_cont=10, h_dev=3,
-                                   nl_moire=True, nl_dir='b', nl_type='sine', nl_skew=0, 
+                                   nl_moire=True, nl_dir='b', nl_type='sine', nl_skew=0,
                                    nl_cont=10, nl_dev=3, nl_tb=0.15, nl_lr=0.15,
                                    gamma=args.gamma, margins=None, seed=args.seed)
     canvas, nl_mask = recap_module(canvas,
                           new_src_pt = src_pt,
-                          seed = args.seed,
                           verbose=args.recapture_verbose,
                           show_mask=args.show_mask)
 
@@ -107,10 +106,11 @@ def main():
     # ===========================================================================================
 
     # Display result
+    cv2.namedWindow("nonlinear mask", cv2.WINDOW_NORMAL)
     cv2.imshow("modified", canvas)
     if args.show_mask:
-        cv2.imshow("nonlinear mask", nl_mask * 4)
-    if not args.empty:
+        cv2.imshow("nonlinear mask", nl_mask)
+    if not args.empty and False:        # TODO edit
         cv2.imshow("original", original)
         if original.shape == canvas.shape and args.psnr:
             psnr_val = psnr(canvas,original)

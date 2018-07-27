@@ -173,7 +173,7 @@ def nonlinear_wave(canvas, gap=4, skew=0, thick=1, directions='b',
     H, W, _ = mask_shape
 
     # Set color
-    #contrast = 32
+    contrast = 64
     if color is None:
         color = (contrast,) * 3
 
@@ -268,8 +268,10 @@ def nonlinear_wave(canvas, gap=4, skew=0, thick=1, directions='b',
     M = cv2.getPerspectiveTransform(src_points, dst_points)
     warped_mask = cv2.warpPerspective(mask, M, (W, H))
 
+    original_mask = warped_mask.copy()
+
     ### Remove (potential) black regions by removing the margins
     warped_mask = warped_mask[tb_extra:-tb_extra, lr_extra:-lr_extra]
 
     out = (canvas + warped_mask).clip(0,255)
-    return np.uint8(out), np.uint8(warped_mask)
+    return np.uint8(out), np.uint8(original_mask)
