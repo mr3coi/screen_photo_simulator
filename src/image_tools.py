@@ -49,5 +49,15 @@ def histogram_equalize(array: np.array, num_bins=1000):
         new_img[index] = c[int((num_bins-1) * value / max_val)]
     return np.floor(new_img)
 
+def to01float(image: np.array):
+    return (image.astype(float) / 255).clip(0,1)
+
+def to255uint8(image: np.array):
+    return (image * 255).clip(0,255).astype(np.uint8)
+
+def contrast_brightness(image: np.array, bright=0.0, contrast=1.0):
+    out = (image.astype(float) - 127) * contrast + 127 + bright
+    return out.clip(0,255).astype(np.uint8)
+
 # Colors (BGR format)
 lightgray = (180,180,180)
