@@ -43,8 +43,10 @@ def get_parser():
                         help="Compute the PSNR value of the output image.")
 
     # Others
-    parser.add_argument("--seed", type=int, default=0,
+    parser.add_argument("--seed", type=int, default=None,
                         help="Seed value for 'np.random.seed'.")
+    parser.add_argument('-m', "--show-mask", action='store_true',
+                        help="Visualize the inserted nonlinear moire mask.")
 
     return parser
 
@@ -83,15 +85,18 @@ def main():
     sample_margins = [t_margin,b_margin,l_margin,r_margin]
 
     recap_module = RecaptureModule(dst_H, dst_W,
-                                   v_moire=2, v_type='sg', v_skew=[20, 80], v_cont=10, v_dev=3,
-                                   h_moire=2, h_type='f', h_skew=[20, 80], h_cont=10, h_dev=3,
-                                   gamma=args.gamma, margins=sample_margins, seed=args.seed)
-    canvas = recap_module(canvas,
+                                   v_moire=0, v_type='sg', v_skew=[20, 80], v_cont=10, v_dev=3,
+                                   h_moire=0, h_type='f', h_skew=[20, 80], h_cont=10, h_dev=3,
+                                   nl_moire=True, nl_dir='b', nl_type='sine', nl_skew=0,
+                                   nl_cont=10, nl_dev=3, nl_tb=0.15, nl_lr=0.15,
+                                   gamma=args.gamma, margins=None, seed=args.seed)
+    canvas, nl_mask = recap_module(canvas,
                           new_src_pt = src_pt,
-                          verbose=args.recapture_verbose)
+                          verbose=args.recapture_verbose,
+                          show_mask=args.show_mask)
 
-    #canvas = dither(canvas,gap=10, skew=50, pattern='rgb', contrast=30, rowwise=True)
     '''
+    canvas = dither(canvas,gap=10, skew=50, pattern='rgb', contrast=30, rowwise=True)
     lineNSkew(canvas, gap=1, skew=50, thick=1, color=(255,255,255))
 
     circles(canvas, [(H//2,W//2-64),(H//2,W//2+64)], max_rad=H//2,color=lightgray)
@@ -101,8 +106,11 @@ def main():
     # ===========================================================================================
 
     # Display result
+    cv2.namedWindow("nonlinear mask", cv2.WINDOW_NORMAL)
     cv2.imshow("modified", canvas)
-    if not args.empty:
+    if args.show_mask:
+        cv2.imshow("nonlinear mask", nl_mask)
+    if not args.empty and False:        # TODO edit
         cv2.imshow("original", original)
         if original.shape == canvas.shape and args.psnr:
             psnr_val = psnr(canvas,original)

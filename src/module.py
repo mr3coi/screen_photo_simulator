@@ -1,6 +1,6 @@
 import numpy as np
 from cv2 import getPerspectiveTransform, warpPerspective
-from moire import linear_wave
+from moire import linear_wave, nonlinear_wave
 from image_tools import gamma_correction
 from warp import warp_image
 
@@ -16,7 +16,9 @@ class RecaptureModule(object):
     def __init__(self, dst_H=-1, dst_W=-1,
                  v_moire=0, v_type=None, v_skew=None, v_cont=None, v_dev=None,
                  h_moire=0, h_type=None, h_skew=None, h_cont=None, h_dev=None,
-                 gamma=1, points=None, margins=None, seed=0):
+                 nl_moire=False, nl_dir=None, nl_type=None, nl_skew=None, nl_cont=None, nl_dev=None,
+                 nl_tb=None, nl_lr=None,
+                 gamma=1, points=None, margins=None, seed=None):
         '''
         :param v_moire: # of vertical moire patterns to insert.
         :type v_moire: int
@@ -72,7 +74,7 @@ class RecaptureModule(object):
         self._out_H = dst_H; self._out_W = dst_W
         self._seed = seed
 
-        # ================================== Moire pattern ========================================
+        # ================================== Linear Moire pattern ========================================
         type_dict = dict(f='fixed',g='gaussian',s='sine')
         self._counts = []
         self._mtypes = []
@@ -130,6 +132,16 @@ class RecaptureModule(object):
             else:
                 raise ValueError("Count of moire patterns cannot be sub-zero; please check your count parameters.")
 
+        # ================================== Non-linear Moire pattern ========================================
+        self._nl_moire  = nl_moire
+        self._nl_dir    = nl_dir
+        self._nl_type   = nl_type
+        self._nl_skew	= nl_skew
+        self._nl_cont	= nl_cont
+        self._nl_dev	= nl_dev
+        self._nl_tb	= nl_tb
+        self._nl_lr	= nl_lr
+
         # ================================== Warping ========================================
         if points is not None:
             self._points = points
@@ -144,12 +156,10 @@ class RecaptureModule(object):
         assert gamma > 0, "ERROR: gamma value cannot be 0 or sub-zero."
         self._gamma = gamma
 
-    def __call__(self, image, new_src_pt=None, new_dst_pt=None, seed=0, verbose=False):
+    def __call__(self, image, new_src_pt=None, new_dst_pt=None, verbose=False, show_mask=False):
         '''
         :param image: the input image to transform (HWC format)
         :type image: np.array
-        :param seed: seed for pseudorandom generation of 'gaussian' moire patterns (o/w doesn't matter).
-        :type seed: int
         :param verbose: whether to print out the processing log or not
         :type verbose: bool
 
@@ -175,10 +185,23 @@ class RecaptureModule(object):
                                   pattern=mtype,
                                   contrast=ctr,
                                   dev=dev,
-                                  seed=seed)
+                                  seed=self._seed)
                 if verbose:
                     print('(Linear moire call) type: {}, skew: {}, contrast: {}, dev: {}, row: {}'.format(
                             mtype, skew, ctr, dev, row))
+
+        # Non-linear moire pattern insertion
+        if self._nl_moire:
+            out, nl_mask = nonlinear_wave(out, directions=self._nl_dir, pattern=self._nl_type,
+                                 skew=self._nl_skew, contrast=self._nl_cont, dev=self._nl_dev,
+                                 tb_margins=self._nl_tb, lr_margins=self._nl_lr, seed=self._seed)
+            if verbose:
+                print('(Non-linear moire call) direction: {}, type: {}, skew: {}, contrast: {}, dev: {}, \
+                        margins: {}, {}' \
+                        .format(self._nl_dir, self._nl_type, self._nl_skew, self._nl_cont, self._nl_dev,
+                                self._nl_tb, self._nl_lr))
+        else:
+            nl_mask = None
 
         # Warping
         dst_H = self._out_H if self._out_H > 0 else H
@@ -216,7 +239,11 @@ class RecaptureModule(object):
 
             M = getPerspectiveTransform(src_points, dst_points)
             out = warpPerspective(out, M, (dst_W, dst_H))
-        return out
+
+        if self._nl_moire and show_mask:
+            return out, nl_mask
+        else:
+            return out
 
     @property
     def gamma(self):
