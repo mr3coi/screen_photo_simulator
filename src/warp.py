@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+from numpy.linalg import inv
+from numpy.linalg.linalg import LinAlgError
 
 import argparse
 import os
@@ -65,15 +67,17 @@ def main():
     dst_H = 600
     dst_W = 800
 
+    H, W, _ = original.shape
+
     ### Randomly generate dest points within the given margins
     t_margin = [0,0.1]
     b_margin = [0.9,1]
     l_margin = [0,0.1]
     r_margin = [0.9,1]
-    tl_h, tr_h = np.random.randint(*[dst_H * val for val in t_margin], size=2)
-    bl_h, br_h = np.random.randint(*[dst_H * val for val in b_margin], size=2)
-    tl_w, bl_w = np.random.randint(*[dst_W * val for val in l_margin], size=2)
-    tr_w, br_w = np.random.randint(*[dst_W * val for val in r_margin], size=2)
+    tl_h, tr_h = np.random.randint(*[H * val for val in t_margin], size=2)
+    bl_h, br_h = np.random.randint(*[H * val for val in b_margin], size=2)
+    tl_w, bl_w = np.random.randint(*[W * val for val in l_margin], size=2)
+    tr_w, br_w = np.random.randint(*[W * val for val in r_margin], size=2)
 
     dst_points = np.zeros((4,2), dtype="float32")
     dst_points[0] = [tl_w, tl_h]    # top-left
@@ -82,15 +86,22 @@ def main():
     dst_points[3] = [bl_w, bl_h]   # bottom-left
 
     M = cv2.getPerspectiveTransform(src_points, dst_points)
-    warped = cv2.warpPerspective(original, M, (dst_W, dst_H))
+    warped = cv2.warpPerspective(original, M, original.shape[-2::-1])
+    '''
+    M = cv2.getPerspectiveTransform(src_points, src_points)
+    warped = cv2.warpPerspective(original, M, original.shape[-2::-1])
+    '''
+    #warped_back = cv2.warpPerspective(warped, M, original.shape[-2::-1], cv2.WARP_INVERSE_MAP)
 
     # Define windows
     cv2.namedWindow("original", cv2.WINDOW_NORMAL)
     cv2.namedWindow("warped", cv2.WINDOW_NORMAL)
+    cv2.namedWindow("warped_back", cv2.WINDOW_NORMAL)
 
     # Display result
     cv2.imshow("original", original)
     cv2.imshow("warped", warped)
+    cv2.imshow("warped_back", warped_back)
     cv2.waitKey(0)
 
     # Save output
