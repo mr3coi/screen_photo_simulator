@@ -1,7 +1,11 @@
 import cv2
 import numpy as np
 
-from image_tools import gamma_correction, contrast_brightness
+from image_tools import gamma_correction,       \
+                        gamma_correction01,     \
+                        contrast_brightness,    \
+                        contrast_brightness01,  \
+                        to01float
 
 import argparse
 import os
@@ -50,13 +54,18 @@ def main():
 
     # ================================== Add operations here =====================================
     '''
-    Appropriate settings:
+    Appropriate settings (uint8, 255):
     - g 1.3, c 1.5, b -60
+    - g 1.8, c 2, b -110
+
+    Appropriate settings (float, 01):
+    - g 1.3, c 1.5, b -0.25
     - g 1.8, c 2, b -110
     '''
 
-    canvas = gamma_correction(canvas, args.gamma)
-    canvas = contrast_brightness(canvas, bright=args.brightness, contrast=args.contrast)
+    canvas = to01float(canvas)
+    canvas = gamma_correction01(canvas, args.gamma)
+    canvas = contrast_brightness01(canvas, bright=args.brightness, contrast=args.contrast)
     # ===========================================================================================
 
     # Display result
