@@ -15,6 +15,10 @@ def gamma_correction(img, gamma=2.2):
             for val in range(256)]).astype(np.uint8)
     return cv2.LUT(img, table)
 
+def gamma_correction01(img, gamma=2.2):
+    invgamma = 1.0/gamma
+    return img**invgamma
+
 def psnr(img1, img2):
     img1 = np.float64(img1); img2 = np.float64(img2)
     for img in (img1, img2):
@@ -48,6 +52,20 @@ def histogram_equalize(array: np.array, num_bins=1000):
     for index,value in np.ndenumerate(array):
         new_img[index] = c[int((num_bins-1) * value / max_val)]
     return np.floor(new_img)
+
+def to01float(image: np.array):
+    return (image.astype(float) / 255).clip(0,1)
+
+def to255uint8(image: np.array):
+    return (image * 255).clip(0,255).astype(np.uint8)
+
+def contrast_brightness(image: np.array, bright=0.0, contrast=1.0):
+    out = (image.astype(float) - 127) * contrast + 127 + bright
+    return out.clip(0,255).astype(np.uint8)
+
+def contrast_brightness01(image: np.array, bright=0.0, contrast=1.0):
+    out = (image - 0.5) * contrast + 0.5 + bright
+    return out.clip(0,1)
 
 # Colors (BGR format)
 lightgray = (180,180,180)
