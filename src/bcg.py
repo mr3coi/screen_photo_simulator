@@ -33,8 +33,8 @@ def get_parser():
                                 Provide a single value to produce a square canvas.")
     parser.add_argument('-g', "--gamma", type=float, default=1,
                         help="Do gamma correction on the given input (default: 1 => no correction)")
-    parser.add_argument('-b', "--brightness", type=float, default=0,
-                        help="Level of brightness to increase (default: 0 => no correction)")
+    parser.add_argument('-b', "--brightness", type=float, default=1,
+                        help="Ratio of brightness to increase (default: 1 => no correction)")
     parser.add_argument('-c', "--contrast", type=float, default=1,
                         help="Ratio of contrast to apply (default: 1 => no correction)")
 
@@ -55,13 +55,12 @@ def main():
     # ================================== Add operations here =====================================
     '''
     Appropriate settings (uint8, 255):
-    - g 1.3, c 1.5, b -60
-    - g 1.8, c 2, b -110
 
     Appropriate settings (float, 01):
-    - g 1.3, c 1.5, b -0.25
-    - g 1.8, c 2, b -110
+    - g 1.2, c 1.8, b 0.6
     '''
+
+    print('gamma: {}, contrast: {}, brightness: {}'.format(args.gamma, args.contrast, args.brightness))
 
     canvas = to01float(canvas)
     canvas = gamma_correction01(canvas, args.gamma)

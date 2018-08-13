@@ -63,9 +63,92 @@ def contrast_brightness(image: np.array, bright=0.0, contrast=1.0):
     out = (image.astype(float) - 127) * contrast + 127 + bright
     return out.clip(0,255).astype(np.uint8)
 
-def contrast_brightness01(image: np.array, bright=0.0, contrast=1.0):
-    out = (image - 0.5) * contrast + 0.5 + bright
+def contrast_brightness01(image: np.array, bright=1.0, contrast=1.0):
+    out = (image - 0.5) * contrast + 0.5
+    out *= bright
     return out.clip(0,1)
 
+def rgb2hsv(rgb, input11=False):
+    def convert11to01(val):
+        return (val+1)/2
+
+    if input11:
+        rgb = [convert11to01(val) for val in rgb]
+
+    if type(rgb[0]) == float:
+        r, g, b = [255 * val for val in rgb]
+    else:
+        r, g, b = [float(val) for val in rgb]
+
+    min_val = min(r, g, b)
+    max_val = max(r, g, b)
+    v = max_val
+
+    chroma = max_val - min_val
+    if v != 0:
+        s = chroma / v
+    else:
+        s = 0
+        h = -1      # unknown
+        return h, s, v
+
+    if r == max_val:
+        h = (g-b) / chroma
+    elif g == max_val:
+        h = (b-r) / chroma + 2
+    else:
+        h = (r-g) / chroma + 4
+    h *= 60
+    h = h + 360 if h < 0 else h
+
+    return h, s, v
+
+def hsv2rgb(hsv, output='255'):
+    def convert01to11(val):
+        return val*2-1
+
+    h, s, v = hsv
+
+    if h == -1:
+        return 0,0,0
+
+    rgb = np.zeros(3)
+    offsets = [0,2,4]
+
+    # Determine max and set value
+    if h >= 60 and h < 180:
+        max_idx = 1         # G is max
+    elif h >= 180 and h < 300:
+        max_idx = 2         # B is max
+    else:
+        max_idx = 0         # R is max
+    rgb[max_idx] = v
+
+    chroma = s * v
+    min_val = v - chroma
+
+    diff = (h / 60 - offsets[max_idx]) * chroma
+    if diff > 0:
+        min_idx = (max_idx+1) % 3
+        mid_idx = (max_idx+2) % 3
+    else:
+        min_idx = (max_idx+2) % 3
+        mid_idx = (max_idx+1) % 3
+    rgb[min_idx] = min_val
+    rgb[mid_idx] = min_val + abs(diff)
+
+    if output == '01':
+        rgb = [val / 255 for val in rgb]
+    elif output == '11':
+        rgb = [convert01to11(val / 255) for val in rgb]
+    elif output == '255':
+        rgb = np.uint8(rgb)
+    else:
+        raise ValueError("Output type must be one of among '01', '11', '255'.")
+    return rgb
+
+def img_convert(img: np.array, func):
+    return np.array([func(pxl) for pxl in img.reshape(-1,3)]).reshape(img.shape)
+    
 # Colors (BGR format)
 lightgray = (180,180,180)
