@@ -194,7 +194,8 @@ class RecaptureModule(object):
         if self._nl_moire:
             out, nl_mask = nonlinear_wave(out, directions=self._nl_dir, pattern=self._nl_type,
                                  skew=self._nl_skew, contrast=self._nl_cont, dev=self._nl_dev,
-                                 tb_margins=self._nl_tb, lr_margins=self._nl_lr, seed=self._seed)
+                                 tb_margins=self._nl_tb, lr_margins=self._nl_lr, seed=self._seed,
+                                 gap=5, thick=1)
             if verbose:
                 print('(Non-linear moire call) direction: {}, type: {}, skew: {}, contrast: {}, dev: {}, \
                         margins: {}, {}' \
@@ -240,10 +241,7 @@ class RecaptureModule(object):
             M = getPerspectiveTransform(src_points, dst_points)
             out = warpPerspective(out, M, (dst_W, dst_H))
 
-        if self._nl_moire and show_mask:
-            return out, nl_mask
-        else:
-            return out
+        return out, nl_mask
 
     @property
     def gamma(self):

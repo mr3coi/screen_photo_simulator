@@ -182,8 +182,7 @@ def nonlinear_wave(canvas, gap=4, skew=0, thick=1, directions='b',
         ### Generate color map
         num_lines = len(list(range(0,H,gap)))
         if pattern=='gaussian':
-            if seed:
-                np.random.seed(seed)
+            np.random.seed(seed)
             color_map = [[int(round(np.clip(np.random.randn() * dev + mean, \
                             max(mean-2*dev,0), min(mean+2*dev,255)))) \
                                 for mean in color]
@@ -273,5 +272,5 @@ def nonlinear_wave(canvas, gap=4, skew=0, thick=1, directions='b',
     ### Remove (potential) black regions by removing the margins
     warped_mask = warped_mask[tb_extra:-tb_extra, lr_extra:-lr_extra]
 
-    out = (canvas + warped_mask).clip(0,255)
+    out = (canvas - warped_mask).clip(0,255)
     return np.uint8(out), np.uint8(original_mask)
