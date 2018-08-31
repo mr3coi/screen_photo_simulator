@@ -149,6 +149,47 @@ def hsv2rgb(hsv, output='255'):
 
 def img_convert(img: np.array, func):
     return np.array([func(pxl) for pxl in img.reshape(-1,3)]).reshape(img.shape)
+
+def adjust_hue(img: np.array, hue: float):
+    '''
+    :param hue: (degree to rotate) / 360
+    :type hue: float (0-1)
+    '''
+    # For convenience of multiplication
+    H,W,C = img.shape
+    img = img.reshape((H,W,C,1))
+
+    # Convert img to YIQ format
+    T_yiq = np.array([[.299,.587,.114],[.596,-.274,-.321],[.211,-.523,.311]])
+    assert C==3, "The number of channels in the given image is {} instead of 3.".format(C)
+    img_yiq = np.matmul(T_yiq, img)
+
+    # Apply hue change
+    hue *= 2*np.pi
+    U = np.cos(hue); V = np.sin(hue)
+    T_hue = np.array([[1,0,0],[0,U,-V],[0,V,U]])
+    img_hue = np.matmul(T_hue, img_yiq)
+
+    # Convert back to RGB format
+    T_yiq_inv = np.array([[1,.956,.621],[1,-.272,-.647],[1,-1.107,1.705]])
+    out = np.matmul(T_yiq_inv, img_hue)
+
+    # Revert back to original dimensions
+    out = out.reshape((H,W,C))
+
+    return out.clip(0,1)
+
+def hue_noise(img: np.array, noise=None, max_size=None):
+    assert noise or max_size, "Provide either the noise values or a max size limit."
+    if noise is None:
+        noise = np.array([np.random.randint(max_size) / 255 for _ in range(3)])
+    else:
+        assert type(noise) == list and len(noise) == 3
+        if np.any([type(val) != float for val in noise]):
+            noise = [val / 255 for val in noise]
+        noise = np.array(noise)
+    out = img + noise.reshape((1,1,-1))
+    return out.clip(0,1)
     
 # Colors (BGR format)
 lightgray = (180,180,180)

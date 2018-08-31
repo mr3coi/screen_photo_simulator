@@ -5,6 +5,8 @@ from image_tools import gamma_correction,       \
                         gamma_correction01,     \
                         contrast_brightness,    \
                         contrast_brightness01,  \
+                        adjust_hue,             \
+                        hue_noise,              \
                         to01float
 
 import argparse
@@ -37,6 +39,10 @@ def get_parser():
                         help="Ratio of brightness to increase (default: 1 => no correction)")
     parser.add_argument('-c', "--contrast", type=float, default=1,
                         help="Ratio of contrast to apply (default: 1 => no correction)")
+    parser.add_argument("--hue", type=float, default=0,
+                        help="Amount of hue to apply (default: 0 => no change)")
+    parser.add_argument('-hn', "--hue-noise", type=int, nargs='+', default=[0,],
+                        help="Amount of hue to apply (default: 0 => no change)")
 
     # Others
     parser.add_argument("--seed", type=int, default=None,
@@ -60,11 +66,19 @@ def main():
     - g 1.2, c 1.8, b 0.6
     '''
 
-    print('gamma: {}, contrast: {}, brightness: {}'.format(args.gamma, args.contrast, args.brightness))
+    print('gamma: {}, contrast: {}, brightness: {}, hue: {}, hue_noise: {}' \
+            .format(args.gamma, args.contrast, args.brightness, args.hue, args.hue_noise))
 
     canvas = to01float(canvas)
     canvas = gamma_correction01(canvas, args.gamma)
     canvas = contrast_brightness01(canvas, bright=args.brightness, contrast=args.contrast)
+    canvas = adjust_hue(canvas, hue=args.hue)
+    if len(args.hue_noise) == 1:
+        canvas = hue_noise(canvas, max_size=args.hue_noise[0])
+    elif len(args.hue_noise) == 3:
+        canvas = hue_noise(canvas, noise=args.hue_noise)
+    else:
+        raise ValueError()
     # ===========================================================================================
 
     # Display result
